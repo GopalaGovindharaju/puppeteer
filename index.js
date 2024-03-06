@@ -27,5 +27,5 @@ puppeteer.launch({ headless: false }).then(async browser => {
     console.log(ratingTitles)
     console.log(await getText('.bold-section-header.title'), await getText('.rating-val.bold-title'))
 
-    await browser.close();
+    //await browser.close();
 });
