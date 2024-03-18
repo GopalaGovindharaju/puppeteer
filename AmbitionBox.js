@@ -107,7 +107,7 @@ puppeteer.use(StealthPlugin());
       const employeeData = [];
       for (const review of employeeReviews) {
         const Emp_likes = await review.$eval("div:nth-child(1) > p", p => p.textContent.trim());
-        const Emp_Dislikes = await review.$eval("div:nth-child(1) > p", p => p.textContent.trim()); //As of now i made the selector path of likes
+        const Emp_Dislikes = await review.$eval("p:nth-child(4)", p => p.textContent.trim()); //As of now i made the selector path of likes
         const rowData = {
           likes: Emp_likes,
           dislikes: Emp_Dislikes,
