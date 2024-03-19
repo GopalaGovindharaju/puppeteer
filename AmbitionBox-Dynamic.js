@@ -13,7 +13,7 @@ const rl = readline.createInterface({
 
 (async () => {
   try {
-    rl.question('Enter the URL to scrape: ', async (url) => {
+    rl.question('Enter the Company Name to scrape: ', async (CompanyName) => {
       const browser = await puppeteer.launch({ headless: false });
       const page = await browser.newPage();
 
@@ -23,8 +23,19 @@ const rl = readline.createInterface({
       };
 
       // Function to scrape overall ratings
-      const scrapeOverallRatings = async () => {
-        await page.goto(url);
+      const scrapeOverallRatings = async (CompanyName) => {
+        await page.goto("https://www.ambitionbox.com/");
+        await waitForSelector("#homeTypeahead");
+        if (!CompanyName) {
+          console.error("Company name is undefined.");
+          return;
+      }
+        CompanyName = CompanyName.toString();
+
+        await page.type("#homeTypeahead", CompanyName);
+        await page.keyboard.press('Enter');
+
+        await page.goto('https://www.ambitionbox.com/reviews/quess-reviews')
 
         await waitForSelector("#ab_company_review_rating_card > div.ab_section-header.container.header.flex.header-end > div > h1");
 
@@ -69,6 +80,8 @@ const rl = readline.createInterface({
 
         return overallrating_data;
       };
+
+      
 
       // Function to scrape employee reviews
       const scrapeEmployeeReviews = async () => {
@@ -180,6 +193,10 @@ const rl = readline.createInterface({
       const overallRatingsData = await scrapeOverallRatings();
       const employeeReviewsData = await scrapeEmployeeReviews();
       const yearTrendRatingsData = await scrapeYearTrendRatings();
+
+      console.log(overallRatingsData);
+      console.log(employeeReviewsData);
+      console.log(yearTrendRatingsData);
 
       // Write data to Excel
       const wb = xlsx.utils.book_new();
