@@ -1,6 +1,6 @@
-const puppeteer = require('puppeteer');
-const xlsx = require('xlsx');
-const readline = require('readline');
+import puppeteer from "puppeteer";
+import xlsx from 'xlsx';
+import readline from 'readline'
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -9,7 +9,7 @@ const rl = readline.createInterface({
 
 async function map() {
     try {
-        rl.question('Enter the Company Name to scrape: ', async (companyName) => {
+            const companyName = 'Quess'
             const browser = await puppeteer.launch({ headless: false });
             const page = await browser.newPage();
 
@@ -106,7 +106,6 @@ async function map() {
 
             await scrapeOverallReview(companyName);
             rl.close();
-        });
 
     } catch (error) {
         console.error('Error in map:', error);

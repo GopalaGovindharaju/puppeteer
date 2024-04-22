@@ -2,19 +2,13 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import xlsx from 'xlsx'
 import fs from 'fs'
-import readline from 'readline'
 
 puppeteer.use(StealthPlugin());
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
-
 (async () => {
   try {
-    rl.question('Enter Company Name: ', async (companyName) => {
-      const browser = await puppeteer.launch({ headless: false });
+    const companyName = 'Quess'
+    const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
 
     const waitForSelector = async (selector) => {
@@ -45,7 +39,7 @@ const rl = readline.createInterface({
 
       await page.waitForSelector("#ab_company_review_rating_card > div.card.globalCard.globalCard--elevated > div > div.overall-wrap > div > div.rating_stats_bars > div:nth-child(2) > label > p.stars_values.count.body-medium");
       const FourStar_Rating = await page.$eval("#ab_company_review_rating_card > div.card.globalCard.globalCard--elevated > div > div.overall-wrap > div > div.rating_stats_bars > div:nth-child(2) > label > p.stars_values.count.body-medium", p => p.textContent.trim());
-      console.log(FourStar_Rating);
+      console.log("Fourstar:", FourStar_Rating);
 
       await page.waitForSelector("#ab_company_review_rating_card > div.card.globalCard.globalCard--elevated > div > div.overall-wrap > div > div.rating_stats_bars > div:nth-child(3) > label > p.stars_values.count.body-medium");
       const ThreeStar_Rating = await page.$eval("#ab_company_review_rating_card > div.card.globalCard.globalCard--elevated > div > div.overall-wrap > div > div.rating_stats_bars > div:nth-child(3) > label > p.stars_values.count.body-medium", p => p.textContent.trim());
@@ -57,7 +51,7 @@ const rl = readline.createInterface({
 
       await page.waitForSelector("#ab_company_review_rating_card > div.card.globalCard.globalCard--elevated > div > div.overall-wrap > div > div.rating_stats_bars > div:nth-child(5) > label > p.stars_values.count.body-medium");
       const OneStar_Rating = await page.$eval("#ab_company_review_rating_card > div.card.globalCard.globalCard--elevated > div > div.overall-wrap > div > div.rating_stats_bars > div:nth-child(5) > label > p.stars_values.count.body-medium", p => p.textContent.trim());
-      console.log(OneStar_Rating);
+      console.log("onestar",OneStar_Rating);
 
       overallrating_data.push({
         'Company Name': CompanyName,
@@ -148,8 +142,8 @@ const rl = readline.createInterface({
       const url = `https://www.ambitionbox.com/reviews/${companyName}-reviews`;
       await page.goto(url);
 
-      await waitForSelector("#ab_company_review_rating_card > div.card.globalCard.globalCard--elevated > div > div.overall-wrap > div > div.badge-cont > div:nth-child(2) > div");
-      const elementSelector = await page.$("#ab_company_review_rating_card > div.card.globalCard.globalCard--elevated > div > div.overall-wrap > div > div.badge-cont > div:nth-child(2) > div");
+      await waitForSelector("#ab_company_review_rating_card > div.card.globalCard.globalCard--elevated > div > div.overall-wrap > div > div.badge-cont > div.caption-strong-large.toggle-trend-cta > span");
+      const elementSelector = await page.$("#ab_company_review_rating_card > div.card.globalCard.globalCard--elevated > div > div.overall-wrap > div > div.badge-cont > div.caption-strong-large.toggle-trend-cta > span");
       await elementSelector.click();
       console.log("Rating trend is clicked");
 
@@ -205,7 +199,7 @@ const rl = readline.createInterface({
 
     // Close the browser
     await browser.close();
-    });
+
     
   } catch (error) {
     console.error("An error occurred:", error);
