@@ -1,6 +1,7 @@
-import puppeteer from "puppeteer";
+import puppeteer from 'puppeteer';
 import xlsx from 'xlsx';
-import readline from 'readline'
+import readline from 'readline';
+
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -9,8 +10,12 @@ const rl = readline.createInterface({
 
 async function map() {
     try {
-            const companyName = 'Quess'
-            const browser = await puppeteer.launch({ headless: false });
+        rl.question('Enter the Company Name to scrape: ', async (companyName) => {
+            const browser = await puppeteer.launch({ headless: false,
+                defaultViewport: {
+                    width: 800, // Set the width of the screen (e.g., 800 pixels)
+                    height: 700 // Set the height of the screen (e.g., 600 pixels)
+                } });
             const page = await browser.newPage();
 
             const waitForSelector = async (selector) => {
@@ -18,31 +23,48 @@ async function map() {
                 console.log("Element is loading");
             };
 
-            const autoScroll = async (page) => {
+            const autoScroll = async (page, selector) => {
+                console.log("autoScroll");
                 try {
-                    await page.evaluate(async () => {
-                        await new Promise((resolve, reject) => {
-                            let totalHeight = 0;
-                            const distance = 100;
-                            const maxScrolls = 50; // Adjust this value as needed
-                            let scrollCount = 0;
-
-                            const scrollInterval = setInterval(() => {
-                                window.scrollBy(0, distance);
-                                totalHeight += distance;
-                                scrollCount++;
-
-                                if (scrollCount >= maxScrolls) {
-                                    clearInterval(scrollInterval);
-                                    resolve();
-                                }
-                            }, 200);
-                        });
-                    });
+                    await page.evaluate(async (selector) => {
+                        const container = document.querySelector(selector);
+                        if (!container) {
+                            console.error("Container with selector '${selector}' not found.");
+                            return;
+                        }
+            
+                        let totalHeight = 0;
+                        let lastScrollTop = 0;
+                        const distance = 2000; // Amount to scroll per iteration
+                        const scrollDelay = 1700; // Delay between each scroll (in milliseconds)
+            
+                        while (true) {
+                            // Scroll down
+                            container.scrollTop += distance;
+            
+                            // Give time for new content to load
+                            await new Promise(resolve => setTimeout(resolve, scrollDelay));
+            
+                            // Check the new height
+                            totalHeight = container.scrollHeight;
+            
+                            // Check if we have reached the bottom of the container
+                            const currentScrollTop = container.scrollTop;
+                            if (currentScrollTop === lastScrollTop) {
+                                // If the scroll position has not changed, we've reached the bottom
+                                break;
+                            }
+            
+                            // Update the last scroll position
+                            lastScrollTop = currentScrollTop;
+                        }
+                    }, selector);
                 } catch (error) {
                     console.error('Error in autoScroll:', error);
                 }
             };
+            
+            
 
             const scrapeOverallReview = async (companyName) => {
                 try {
@@ -57,19 +79,43 @@ async function map() {
                     await page.type('#searchboxinput', companyName); // Enter the company name in the search input
                     await page.keyboard.press('Enter'); // Press Enter to initiate the search
 
-                    await autoScroll(page);
+                    
 
-                    await page.waitForSelector('.k7jAl.miFGmb.lJ3Kh.w6Uhzf .aIFcqe .m6QErb.DxyBCb.kA9KIf.dS8AEf.ecceSd .Nv2PK.tH5CWc.THOPZb .hfpxzc');
-                    const linkes = await page.$('.k7jAl.miFGmb.lJ3Kh.w6Uhzf .aIFcqe .m6QErb.DxyBCb.kA9KIf.dS8AEf.ecceSd .Nv2PK.tH5CWc.THOPZb .hfpxzc');
-                    await linkes.click();
+                    await page
+                      .waitForSelector(".Nv2PK.tH5CWc.THOPZb .hfpxzc", {
+                        timeout: 5000,
+                      })
+                      .then(async () => {
+                        const links = await page.$(
+                          ".Nv2PK.tH5CWc.THOPZb .hfpxzc"
+                        );
+                        if (links) {
+                          await links.click();
+                          console.log("Link clicked successfully");
+                        } else {
+                          console.log(
+                            "Selector found, but no element matched."
+                          );
+                        }
+                      })
+                      .catch(() => {
+                        console.log(
+                          "Selector not found or timeout occurred. Skipping the link click."
+                        );
+                      });
+
                     await page.waitForSelector('.yx21af.lLU2pe.XDi3Bc .RWPxGd .hh2c6:nth-child(2)');
                     const reviewsButton = await page.$('.yx21af.lLU2pe.XDi3Bc .RWPxGd .hh2c6:nth-child(2)');
                     await reviewsButton.click();
-
-                    await page.waitForFunction(() => {
-                        const reviewElements = document.querySelectorAll('.m6QErb .jftiEf.fontBodyMedium .jJc9Ad');
-                        return reviewElements.length > 50;
-                    });
+                    console.log("waiting for reviews");
+                    await page.waitForSelector('.m6QErb.DxyBCb.kA9KIf.dS8AEf')
+                    const sort = await page.$('#QA0Szd > div > div > div.w6VYqd > div.bJzME.tTVLSc > div > div.e07Vkf.kA9KIf > div > div > div.m6QErb.DxyBCb.kA9KIf.dS8AEf > div.m6QErb.Pf6ghf.KoSBEe.ecceSd.tLjsW > div.TrU0dc.kdfrQc > button > span > span')
+                    await sort.click();
+                    const newest = await page.$('#action-menu > div:nth-child(2)')
+                    await newest.click();
+                    
+                    await page.waitForSelector('.m6QErb.DxyBCb.kA9KIf.dS8AEf .m6QErb .jftiEf.fontBodyMedium .jJc9Ad')
+                    await autoScroll(page, '.m6QErb.DxyBCb.kA9KIf.dS8AEf');
 
                     const reviews = await page.$$eval('.m6QErb.DxyBCb.kA9KIf.dS8AEf .m6QErb .jftiEf.fontBodyMedium .jJc9Ad', reviews => reviews.map(review => {
                         const currentDate = new Date().toLocaleDateString();
@@ -100,12 +146,13 @@ async function map() {
                 } catch (e) {
                     console.error('error: ', e);
                 } finally {
-                    await browser.close();
+                    //await browser.close();
                 }
             };
 
             await scrapeOverallReview(companyName);
             rl.close();
+        });
 
     } catch (error) {
         console.error('Error in map:', error);
